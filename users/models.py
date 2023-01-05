@@ -11,3 +11,6 @@ class CustomUser(AbstractUser):
     phone = models.CharField(
         validators=[phone_regex], max_length=17, blank=True, null=True)
     address = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return str(self.username)
