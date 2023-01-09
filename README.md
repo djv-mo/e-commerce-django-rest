@@ -71,14 +71,14 @@ docker run -p 8000:8000 PROJECT_NAME
 
 environmental variables
 
-export SECRET_KEY="your_secret_key"
-export DEBUG=True
-export ALLOWED_HOSTS="localhost,127.0.0.1"
-export DATABASE_URL="postgresql://user:password@localhost:5432/database_name"
-export STRIPE_PUBLISHABLE_KEY="your_publishable_key"
-export STRIPE_SECRET_KEY="your_secret_key"
-export STRIPE_LIVE_MODE=False
-export DJSTRIPE_WEBHOOK_SECRET="your_webhook_secret"
+    export SECRET_KEY="your_secret_key"
+    export DEBUG=True
+    export ALLOWED_HOSTS="localhost,127.0.0.1"
+    export DATABASE_URL="postgresql://user:password@localhost:5432/database_name"
+    export STRIPE_PUBLISHABLE_KEY="your_publishable_key"
+    export STRIPE_SECRET_KEY="your_secret_key"
+    export STRIPE_LIVE_MODE=False
+    export DJSTRIPE_WEBHOOK_SECRET="your_webhook_secret"
 
 License
 
