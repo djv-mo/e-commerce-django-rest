@@ -119,10 +119,15 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True)
+    total_price = serializers.SerializerMethodField()
+
+    def get_total_price(self, order):
+        return sum([item.quantity * item.product.unit_price for item in order.items.all()])
 
     class Meta:
         model = Order
-        fields = ['id', 'customer', 'placed_at', 'payment_status', 'items']
+        fields = ['id', 'customer', 'placed_at',
+                  'payment_status', 'items', 'total_price']
 
 
 class UpdateOrderSerializer(serializers.ModelSerializer):
@@ -255,6 +260,7 @@ class CreateOrderSerializer(serializers.Serializer):
         # Check if the payment was successful
         if payment.status == 'succeeded':
             order.payment_status = Order.COMPLETE
+
             order.save()
         else:
             order.payment_status = Order.FAILED

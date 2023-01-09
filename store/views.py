@@ -95,8 +95,8 @@ class OrderViewSet(ModelViewSet):
         user = self.request.user
 
         if user.is_staff:
-            return Order.objects.all()
+            return Order.objects.all().prefetch_related('items')
 
         customer_id = get_user_model().objects.only(
             'id').get(id=user.id)
-        return Order.objects.filter(customer_id=customer_id)
+        return Order.objects.filter(customer_id=customer_id).prefetch_related('items')
