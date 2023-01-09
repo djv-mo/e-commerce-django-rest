@@ -136,53 +136,8 @@ class UpdateOrderSerializer(serializers.ModelSerializer):
         fields = ['payment_status']
 
 
-# class CreateOrderSerializer(serializers.Serializer):
-#     cart_id = serializers.UUIDField()
-
-#     def validate_cart_id(self, cart_id):
-#         if not Cart.objects.filter(pk=cart_id).exists():
-#             raise serializers.ValidationError(
-#                 'No cart with the given ID was found.')
-#         if CartItem.objects.filter(cart_id=cart_id).count() == 0:
-#             raise serializers.ValidationError('The cart is empty.')
-#         return cart_id
-
-#     def save(self, **kwargs):
-#         with transaction.atomic():
-#             cart_id = self.validated_data['cart_id']
-
-#             customer = get_user_model().objects.get(
-#                 id=self.context['id'])
-#             if getattr(customer, 'address', None) is None:
-#                 raise serializers.ValidationError(
-#                     'Your address should not be empty')
-#             if getattr(customer, 'phone', None) is None:
-#                 raise serializers.ValidationError(
-#                     'Your phone should not be empty')
-#             order = Order.objects.create(customer=customer)
-
-#             cart_items = CartItem.objects \
-#                 .select_related('product') \
-#                 .filter(cart_id=cart_id)
-#             order_items = [
-#                 OrderItem(
-#                     order=order,
-#                     product=item.product,
-#                     unit_price=item.product.unit_price,
-#                     quantity=item.quantity
-#                 ) for item in cart_items
-#             ]
-#             OrderItem.objects.bulk_create(order_items)
-
-#             Cart.objects.filter(pk=cart_id).delete()
-
-#             order_created.send_robust(self.__class__, order=order)
-
-#             return order
-
 class CreateOrderSerializer(serializers.Serializer):
     cart_id = serializers.UUIDField()
-    # Test card
 
     def validate_cart_id(self, cart_id):
         if not Cart.objects.filter(pk=cart_id).exists():
@@ -260,8 +215,11 @@ class CreateOrderSerializer(serializers.Serializer):
         # Check if the payment was successful
         if payment.status == 'succeeded':
             order.payment_status = Order.COMPLETE
-
             order.save()
+            for item in order_items:
+                product = item.product
+                product.inventory -= item.quantity
+                product.save()
         else:
             order.payment_status = Order.FAILED
             order.save()
