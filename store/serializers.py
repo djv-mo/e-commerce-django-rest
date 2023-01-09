@@ -75,11 +75,19 @@ class AddCartItemSerializer(serializers.ModelSerializer):
         cart_id = self.context['cart_id']
         product_id = self.validated_data['product_id']
         quantity = self.validated_data['quantity']
+        selected_product = Product.objects.get(pk=product_id)
+        if quantity > selected_product.inventory:
+            raise serializers.ValidationError(
+                "You have entered a quantity that is more than the product's availabe quantity")
 
         try:
             cart_item = CartItem.objects.get(
                 cart_id=cart_id, product_id=product_id)
-            cart_item.quantity += quantity
+            if cart_item.quantity+quantity > selected_product.inventory:
+                raise serializers.ValidationError(
+                    "You have entered a quantity that is more than the product's availabe quantity")
+            else:
+                cart_item.quantity += quantity
             cart_item.save()
             self.instance = cart_item
         except CartItem.DoesNotExist:
@@ -138,6 +146,9 @@ class CreateOrderSerializer(serializers.Serializer):
 
             customer = get_user_model().objects.get(
                 id=self.context['id'])
+            if getattr(customer, 'address', None) is None:
+                raise serializers.ValidationError(
+                    'Your address should not be empty')
             order = Order.objects.create(customer=customer)
 
             cart_items = CartItem.objects \
