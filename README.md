@@ -1,8 +1,8 @@
-#E-Commerce Project
+# E-Commerce Project
 
 Welcome to the E-Commerce Project! This is a simple online store where users can browse and purchase products.
 
-##Features
+## Features
 
 - User authentication
 - Product listings and categories
@@ -11,12 +11,12 @@ Welcome to the E-Commerce Project! This is a simple online store where users can
 - Order history and tracking
 - Admin dashboard for managing products and orders
 
-##Technologies
+## Technologies
 
 - Django for the backend
 - Stripe for payment processing
 
-##Installation
+## Installation
 
 To set up the project locally, follow these steps:
 
@@ -46,7 +46,7 @@ python manage.py createsuperuser
 
 python manage.py runserver
 
-##Docker Setup
+## Docker Setup
 
     Install Docker on your machine.
 
@@ -70,7 +70,7 @@ docker run -p 8000:8000 PROJECT_NAME
 
     To stop the Docker container, press CTRL + C in the terminal.
 
-##environmental variables
+## environmental variables
 
     export SECRET_KEY="your_secret_key"
     export DEBUG=True
@@ -81,6 +81,6 @@ docker run -p 8000:8000 PROJECT_NAME
     export STRIPE_LIVE_MODE=False
     export DJSTRIPE_WEBHOOK_SECRET="your_webhook_secret"
 
-##License
+## License
 
 This project is licensed under the MIT License.
