@@ -149,6 +149,9 @@ class CreateOrderSerializer(serializers.Serializer):
             if getattr(customer, 'address', None) is None:
                 raise serializers.ValidationError(
                     'Your address should not be empty')
+            if getattr(customer, 'phone', None) is None:
+                raise serializers.ValidationError(
+                    'Your phone should not be empty')
             order = Order.objects.create(customer=customer)
 
             cart_items = CartItem.objects \
