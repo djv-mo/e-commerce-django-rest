@@ -1,4 +1,4 @@
-import stripe
+import os
 from datetime import timedelta
 from pathlib import Path
 import dj_database_url
@@ -10,12 +10,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-!t(9rh&ff-l82w(50(+tw1@@7ou^c+7#z%(v7e9xs9t#onvp%5'
+SECRET_KEY = os.environ.get('SECRET_KEY',
+                            'django-insecure-!t(9rh&ff-l82w(50(+tw1@@7ou^c+7#z%(v7e9xs9t#onvp%5')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', True)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -124,11 +125,11 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Postgres
-DATABASES['default'] = dj_database_url.config(
-    default='postgres:///store',
-    conn_max_age=600,
-    conn_health_checks=True,
-)
+database_url = os.environ.get('DATABASE_URL',
+                              'postgres://mo:mo@localhost:5432/store')
+DATABASES = {
+    'default': dj_database_url.parse(database_url)
+}
 # Authenticatio
 AUTH_USER_MODEL = 'users.CustomUser'
 
@@ -165,9 +166,13 @@ INTERNAL_IPS = [
     # ...
 ]
 # stripe
-STRIPE_TEST_PUBLISHABLE_KEY = 'pk_test_51MOOKJFJpMaDUyFvYm7gjSpma5GQGTLxgBAyrAj0p4HnpY2ZxzFxB0CRTxCGJIb2ELoHUOzaFX38in72xwCcuuSc00N6PFpHml'
-STRIPE_TEST_SECRET_KEY = 'sk_test_51MOOKJFJpMaDUyFvyOhL2WrJWSNFE4PBovDMUA60nnKdt0e5h40O0for1D1ESfMBgyvQtRrWozx378hlCO908krQ00l1JueF7f'
-STRIPE_LIVE_MODE = False  # Change to True in production
-# Get it from the section in the Stripe dashboard where you added the webhook endpoint
-DJSTRIPE_WEBHOOK_SECRET = "whsec_4f5ccdacf9a22085305e631b214f3508457c008d7d01d6474e2ce84f6a4a823c"
-DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"
+
+STRIPE_TEST_PUBLISHABLE_KEY = os.environ.get(
+    'STRIPE_TEST_PUBLISHABLE_KEY', 'pk_test_51MOOKJFJpMaDUyFvYm7gjSpma5GQGTLxgBAyrAj0p4HnpY2ZxzFxB0CRTxCGJIb2ELoHUOzaFX38in72xwCcuuSc00N6PFpHml')
+STRIPE_TEST_SECRET_KEY = os.environ.get(
+    'STRIPE_TEST_SECRET_KEY', 'sk_test_51MOOKJFJpMaDUyFvyOhL2WrJWSNFE4PBovDMUA60nnKdt0e5h40O0for1D1ESfMBgyvQtRrWozx378hlCO908krQ00l1JueF7f')
+STRIPE_LIVE_MODE = os.environ.get('STRIPE_LIVE_MODE', False)
+DJSTRIPE_WEBHOOK_SECRET = os.environ.get(
+    'DJSTRIPE_WEBHOOK_SECRET', 'whsec_4f5ccdacf9a22085305e631b214f3508457c008d7d01d6474e2ce84f6a4a823c')
+DJSTRIPE_FOREIGN_KEY_TO_FIELD = os.environ.get(
+    'DJSTRIPE_FOREIGN_KEY_TO_FIELD', 'id')
