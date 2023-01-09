@@ -1,8 +1,10 @@
+import stripe
 from django.db import transaction
+from django.contrib.auth import get_user_model
+from django.conf import settings
 from rest_framework import serializers
 from .models import Product, Category, ProductImage, Cart, CartItem, Order, OrderItem
 from .signals import order_created
-from django.contrib.auth import get_user_model
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -129,8 +131,53 @@ class UpdateOrderSerializer(serializers.ModelSerializer):
         fields = ['payment_status']
 
 
+# class CreateOrderSerializer(serializers.Serializer):
+#     cart_id = serializers.UUIDField()
+
+#     def validate_cart_id(self, cart_id):
+#         if not Cart.objects.filter(pk=cart_id).exists():
+#             raise serializers.ValidationError(
+#                 'No cart with the given ID was found.')
+#         if CartItem.objects.filter(cart_id=cart_id).count() == 0:
+#             raise serializers.ValidationError('The cart is empty.')
+#         return cart_id
+
+#     def save(self, **kwargs):
+#         with transaction.atomic():
+#             cart_id = self.validated_data['cart_id']
+
+#             customer = get_user_model().objects.get(
+#                 id=self.context['id'])
+#             if getattr(customer, 'address', None) is None:
+#                 raise serializers.ValidationError(
+#                     'Your address should not be empty')
+#             if getattr(customer, 'phone', None) is None:
+#                 raise serializers.ValidationError(
+#                     'Your phone should not be empty')
+#             order = Order.objects.create(customer=customer)
+
+#             cart_items = CartItem.objects \
+#                 .select_related('product') \
+#                 .filter(cart_id=cart_id)
+#             order_items = [
+#                 OrderItem(
+#                     order=order,
+#                     product=item.product,
+#                     unit_price=item.product.unit_price,
+#                     quantity=item.quantity
+#                 ) for item in cart_items
+#             ]
+#             OrderItem.objects.bulk_create(order_items)
+
+#             Cart.objects.filter(pk=cart_id).delete()
+
+#             order_created.send_robust(self.__class__, order=order)
+
+#             return order
+
 class CreateOrderSerializer(serializers.Serializer):
     cart_id = serializers.UUIDField()
+    # Test card
 
     def validate_cart_id(self, cart_id):
         if not Cart.objects.filter(pk=cart_id).exists():
@@ -144,6 +191,7 @@ class CreateOrderSerializer(serializers.Serializer):
         with transaction.atomic():
             cart_id = self.validated_data['cart_id']
 
+            # Get the customer and validate their address and phone
             customer = get_user_model().objects.get(
                 id=self.context['id'])
             if getattr(customer, 'address', None) is None:
@@ -152,8 +200,11 @@ class CreateOrderSerializer(serializers.Serializer):
             if getattr(customer, 'phone', None) is None:
                 raise serializers.ValidationError(
                     'Your phone should not be empty')
+
+            # Create the order
             order = Order.objects.create(customer=customer)
 
+            # Get the cart items and create the order items
             cart_items = CartItem.objects \
                 .select_related('product') \
                 .filter(cart_id=cart_id)
@@ -167,8 +218,52 @@ class CreateOrderSerializer(serializers.Serializer):
             ]
             OrderItem.objects.bulk_create(order_items)
 
-            Cart.objects.filter(pk=cart_id).delete()
+            # Calculate the total cost of the
+            total_cost = int(sum(
+                item.unit_price * item.quantity for item in order_items)*100)
+        # Set the Stripe API key
+        stripe.api_key = settings.STRIPE_TEST_SECRET_KEY
+        payment_method_card = stripe.PaymentMethod.create(
+            type='card',
+            card={
+                'number': '4242424242424242',
+                'exp_month': 12,
+                'exp_year': 2030,
+                'cvc': 123,
+            },
+        )
 
-            order_created.send_robust(self.__class__, order=order)
+        customer_stripe = stripe.Customer.create(
+            description='Test customer',
+            email='test@example.com',
+            name='Test Customer',
+            phone='+1234567890',
+        )
+        # Create the payment
+        payment = stripe.PaymentIntent.create(
+            amount=total_cost,
+            currency='usd',
+            payment_method=payment_method_card,
+            confirm=True,
+            customer=customer_stripe,
+            error_on_requires_action=True,
+            metadata={
+                'order_id': order.id
+            }
+        )
 
-            return order
+        # Check if the payment was successful
+        if payment.status == 'succeeded':
+            order.payment_status = Order.COMPLETE
+            order.save()
+        else:
+            order.payment_status = Order.FAILED
+            order.save()
+
+        # Delete the cart
+        Cart.objects.filter(pk=cart_id).delete()
+
+        # Send a signal that the order has been created
+        order_created.send_robust(self.__class__, order=order)
+
+        return order

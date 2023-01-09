@@ -1,3 +1,4 @@
+import stripe
 from datetime import timedelta
 from pathlib import Path
 import dj_database_url
@@ -32,6 +33,7 @@ INSTALLED_APPS = [
     'django_filters',
     "debug_toolbar",
     "django_zxcvbn_password_validator",
+    'djstripe',
     # my apps
     'users',
     'store',
@@ -162,3 +164,10 @@ INTERNAL_IPS = [
     "127.0.0.1",
     # ...
 ]
+# stripe
+STRIPE_TEST_PUBLISHABLE_KEY = 'pk_test_51MOOKJFJpMaDUyFvYm7gjSpma5GQGTLxgBAyrAj0p4HnpY2ZxzFxB0CRTxCGJIb2ELoHUOzaFX38in72xwCcuuSc00N6PFpHml'
+STRIPE_TEST_SECRET_KEY = 'sk_test_51MOOKJFJpMaDUyFvyOhL2WrJWSNFE4PBovDMUA60nnKdt0e5h40O0for1D1ESfMBgyvQtRrWozx378hlCO908krQ00l1JueF7f'
+STRIPE_LIVE_MODE = False  # Change to True in production
+# Get it from the section in the Stripe dashboard where you added the webhook endpoint
+DJSTRIPE_WEBHOOK_SECRET = "whsec_4f5ccdacf9a22085305e631b214f3508457c008d7d01d6474e2ce84f6a4a823c"
+DJSTRIPE_FOREIGN_KEY_TO_FIELD = "id"
